@@ -220,7 +220,7 @@ func locate(document *yaml.Node, pointer gopatch.Pointer, path string) (*yaml.No
 				}
 			} else {
 				if len(matchingIndexes) != 1 {
-					return nil, gopatch.OpMultipleMatchingIndexErr{currPath, matchingIndexes}
+					return nil, gopatch.OpMultipleMatchingIndexErr{Path: currPath, Idxs: matchingIndexes}
 				}
 
 				idx, err := gopatch.ArrayIndex{Index: matchingIndexes[0], Modifiers: typedToken.Modifiers, Array: reflect.ValueOf(node.Content), Path: currPath}.Concrete()
@@ -236,7 +236,7 @@ func locate(document *yaml.Node, pointer gopatch.Pointer, path string) (*yaml.No
 
 		case gopatch.KeyToken:
 			if node.Kind != yaml.MappingNode {
-				return nil, gopatch.OpMissingMapKeyErr{typedToken.Key, currPath, mappingKeys(node)}
+				return nil, gopatch.OpMissingMapKeyErr{Key: typedToken.Key, Path: currPath, Obj: mappingKeys(node)}
 			}
 
 			var (
@@ -257,7 +257,7 @@ func locate(document *yaml.Node, pointer gopatch.Pointer, path string) (*yaml.No
 			}
 
 			if !found && !typedToken.Optional {
-				return nil, gopatch.OpMissingMapKeyErr{typedToken.Key, currPath, mappingKeys(node)}
+				return nil, gopatch.OpMissingMapKeyErr{Key: typedToken.Key, Path: currPath, Obj: mappingKeys(node)}
 			}
 
 			node = child
@@ -306,7 +306,7 @@ func locate(document *yaml.Node, pointer gopatch.Pointer, path string) (*yaml.No
 			}
 
 		default:
-			return nil, gopatch.OpUnexpectedTokenErr{token, currPath}
+			return nil, gopatch.OpUnexpectedTokenErr{Token: token, Path: currPath}
 		}
 	}
 
