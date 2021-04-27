@@ -35,6 +35,25 @@ meta:
     channel:       "#pipelines-notifications"
 
 
+groups:
+  - name: setup
+    jobs:
+      - set-github-webhook
+
+jobs:
+  - name: set-github-webhook
+    serial: true
+    plan:
+      - put: create-webhook
+        resource: github-webhook
+        params:
+          org:           (( grab meta.github.owner ))
+          repo:          (( grab meta.github.repo ))
+          resource_name: git
+          webhook_token: ((concourse-webhook-token))
+          operation:     create
+          events:        [ push ]
+
 resources:
 
   - name: git
@@ -55,3 +74,16 @@ resources:
       file:        (( concat "versions/" meta.pipeline ))
       private_key: ((github-private-key))
       git_user:    "((git-commit-name)) <((git-commit-email))>"
+
+  - name: github-webhook
+    type: github-webhook-resource
+    source:
+      github_api:   https://api.github.com
+      github_token: (( grab meta.github.access_token ))
+
+resource_types:
+
+  - name: github-webhook-resource
+    type: docker-image
+    source:
+      repository: homedepottech/github-webhook-resource
