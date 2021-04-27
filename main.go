@@ -12,7 +12,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var debug, silent bool
+var debug, silent, version bool
+
+var Version = "(development)"
 
 func main() {
 
@@ -90,6 +92,7 @@ func main() {
 	locateCmd.MarkFlagRequired("path")
 
 	var rootCmd = &cobra.Command{
+		Version: Version,
 		Use:   "yasak",
 		Short: "Yet Another YAML Swiss Army Knife",
 		Long: `Yet Another YAML Swiss Army Knife.
@@ -99,6 +102,7 @@ func main() {
 
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "activate debug mode")
 	rootCmd.PersistentFlags().BoolVarP(&silent, "silent", "s", false, "activate silent mode")
+	rootCmd.PersistentFlags().BoolVarP(&version, "version", "v", false, "display version")
 
 	rootCmd.AddCommand(locateCmd)
 	rootCmd.Execute()
