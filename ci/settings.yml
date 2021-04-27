@@ -37,6 +37,10 @@ meta:
 
 resources:
 
+  - name: git
+    webhook_token: ((concourse-webhook-token))
+    check_every: 24h
+
   - name: version
     type: semver
     source:
