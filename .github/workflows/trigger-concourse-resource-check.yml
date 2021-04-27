@@ -9,4 +9,5 @@ jobs:
           CONCOURSE_WEBHOOK_TOKEN: ${{ secrets.CONCOURSE_WEBHOOK_TOKEN }}
         run:
           curl --silent --fail --show-error --location
+              --request "POST"
               --url "https://ci.gstack.io/api/v1/teams/gk-plat-devs/pipelines/yasak/resources/git/check/webhook?webhook_token=${CONCOURSE_WEBHOOK_TOKEN}"
