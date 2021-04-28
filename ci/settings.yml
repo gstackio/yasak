@@ -43,28 +43,53 @@ groups:
   - name: setup
     jobs:
       - set-github-webhooks
+      - delete-github-webhooks
 
 jobs:
   - name: set-github-webhooks
     serial: true
+    serial_groups: [ github-webhooks ]
     plan:
       - get: concourse-webhook-token
         trigger: true
-      - put: create-webhook
+      - put: create-repo-webhook
         resource: github-webhook
         params:
-          org:           (( grab meta.github.owner ))
-          repo:          (( grab meta.github.repo ))
-          resource_name: git
-          webhook_token: ((concourse-webhook-token))
           operation:     create
+          resource_name: git
           events:        [ push ]
+          <<: &github_webhook_resource_params
+            org:           (( grab meta.github.owner ))
+            repo:          (( grab meta.github.repo ))
+            webhook_token: ((concourse-webhook-token))
+      - put: create-pr-webhook
+        resource: github-webhook
+        params:
+          operation:     create
+          resource_name: git-pull-requests
+          events:        [ push, pull_request ]
+          <<: *github_webhook_resource_params
+
+  - name: delete-github-webhooks
+    serial: true
+    serial_groups: [ github-webhooks ]
+    plan:
+      - put: delete-repo-webhook
+        resource: github-webhook
+        params:
+          operation:     delete
+          resource_name: git
+          events:        [ push ]
+          <<: *github_webhook_resource_params
+      - put: delete-pr-webhook
+        resource: github-webhook
+        params:
+          operation:     delete
+          resource_name: git-pull-requests
+          events:        [ push, pull_request ]
+          <<: *github_webhook_resource_params
 
 resources:
-
-  - name: git
-    webhook_token: ((concourse-webhook-token))
-    check_every: 24h
 
   - name: version
     type: semver
@@ -80,6 +105,14 @@ resources:
       file:        (( concat "versions/" meta.pipeline ))
       private_key: ((github-private-key))
       git_user:    "((git-commit-name)) <((git-commit-email))>"
+
+  - name: git
+    webhook_token: ((concourse-webhook-token))
+    check_every: 24h
+
+  - name: git-pull-requests
+    webhook_token: ((concourse-webhook-token))
+    # check_every: 1m # we leave the default here
 
   - name: github-webhook
     type: github-webhook-resource
