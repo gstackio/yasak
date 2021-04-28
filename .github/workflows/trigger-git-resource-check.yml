@@ -14,7 +14,8 @@ jobs:
       - name: Trigger resource check
         uses: gstackio/trigger-concourse-resource-check-action@master
         with:
-          concourse-url:      https://ci.gstack.io
-          concourse-team:     gk-plat-devs
-          concourse-pipeline: yasak
-          concourse-resource: git
+          concourse-url:           https://ci.gstack.io
+          concourse-team:          gk-plat-devs
+          concourse-pipeline:      yasak
+          concourse-resource:      git
+          concourse-webhook-token: ${{ secrets.CONCOURSE_WEBHOOK_TOKEN }}
