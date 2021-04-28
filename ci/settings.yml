@@ -40,6 +40,15 @@ meta:
 
 
 groups:
+  - name: (( grab meta.pipeline ))
+    jobs:
+      - (( delete major ))
+      - (( delete minor ))
+  - name: version
+    jobs:
+      - major
+      - minor
+      - bump-patch
   - name: setup
     jobs:
       - set-github-webhooks
