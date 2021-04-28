@@ -89,6 +89,42 @@ jobs:
           events:        [ push, pull_request ]
           <<: *github_webhook_resource_params
 
+  - name: test
+    plan:
+      - do:
+        - (( append ))
+        - get: build-container
+          trigger: true
+        - task: compile
+          image: build-container
+          config:
+            platform: linux
+            inputs:
+              - name: git
+            outputs:
+              - name: compiled-binary
+            run:
+              dir: git
+              path: go
+              args:
+                - build
+                - -o
+                - ../compiled-binary/yasak
+        - task: test
+          image: build-container
+          config:
+            platform: linux
+            inputs:
+              - name: compiled-binary
+              - name: git
+            run:
+              path: sh
+              args:
+                - -exc
+                - |
+                  compiled-binary/yasak locate --path "/bim/bam" git/test/fixture1.yml > result1
+                  diff -u git/test/expected1 result1
+
 resources:
 
   - name: version
@@ -127,6 +163,14 @@ resources:
       username: (( grab meta.credhub.client ))
       password: ((credhub-client-secret))
       path: (( concat "/concourse/" meta.team "/concourse-webhook-token" ))
+
+  - name: build-container
+    type: docker-image
+    icon: docker
+    source:
+      repository: golang
+      tag: (( concat meta.go.version "-alpine" ))
+    check_every: 24h
 
 resource_types:
 
