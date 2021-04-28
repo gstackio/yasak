@@ -4,7 +4,7 @@ jobs:
   trigger-resource-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Run a one-line script
+      - name: Trigger a resource check in Concourse
         env:
           CONCOURSE_WEBHOOK_TOKEN: ${{ secrets.CONCOURSE_WEBHOOK_TOKEN }}
         run:
