@@ -122,8 +122,13 @@ jobs:
               args:
                 - -exc
                 - |
-                  compiled-binary/yasak locate --path "/bim/bam" git/test/fixture1.yml > result1
+                  export PATH=${PWD}/compiled-binary:${PATH}
+
+                  yasak locate --path "/bim/bam" git/test/fixture1.yml > result1
                   diff -u git/test/expected1 result1
+
+                  git/example-edit-value.sh "git/test/fixture2.yml" "/bim/bam/toto" "plop" > result2.yml
+                  diff -u result2.yml git/test/expected2.yml
 
 resources:
 
