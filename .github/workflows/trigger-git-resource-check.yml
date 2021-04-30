@@ -1,5 +1,5 @@
-name: Concourse resource-check trigger
-on: push
+name: Trigger Concourse git resource
+on: [ push, workflow_dispatch ]
 jobs:
   trigger-resource-check:
     runs-on: ubuntu-latest
