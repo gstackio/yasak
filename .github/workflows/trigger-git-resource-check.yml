@@ -4,13 +4,6 @@ jobs:
   trigger-resource-check:
     runs-on: ubuntu-latest
     steps:
-      # - name: Trigger a resource check in Concourse
-      #   env:
-      #     CONCOURSE_WEBHOOK_TOKEN: ${{ secrets.CONCOURSE_WEBHOOK_TOKEN }}
-      #   run:
-      #     curl --silent --fail --show-error --location
-      #         --request "POST"
-      #         --url "https://ci.gstack.io/api/v1/teams/gk-plat-devs/pipelines/yasak/resources/git/check/webhook?webhook_token=${CONCOURSE_WEBHOOK_TOKEN}"
       - name: Trigger resource check
         uses: gstackio/trigger-concourse-resource-check-action@master
         with:
