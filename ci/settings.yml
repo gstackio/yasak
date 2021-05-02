@@ -16,6 +16,11 @@ meta:
     email:  ((git-commit-email))
     name:   ((git-commit-name))
 
+  image:
+    registry:
+      username: ((dockerhub-username))
+      password: ((dockerhub-password))
+
   aws:
     bucket:      (( grab meta.pipeline ))
     region_name: us-east-1
@@ -134,7 +139,6 @@ jobs:
 resources:
 
   - name: version
-    type: semver
     source:
       bucket:            (( prune ))
       region_name:       (( prune ))
