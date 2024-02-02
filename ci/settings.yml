@@ -9,7 +9,6 @@ meta:
   initial_version: 1.0.0
 
   go:
-    version: "1.16"
     binary: yasak
     cmd_module: .
 
@@ -18,20 +17,26 @@ meta:
     name:   ((git-commit-name))
 
   image:
+    name: (( concat meta.private-registry.host "/gstack/gk-ops" ))
+    tag:  latest
     registry:
-      username: ((dockerhub-username))
-      password: ((dockerhub-password))
+      username: (( grab meta.private-registry.username ))
+      password: (( grab meta.private-registry.password ))
+
+  private-registry:
+    host:       harbor.ci.gstack.io
+    username:   ((private-registry-username))
+    password:   ((private-registry-password))
 
   aws:
     bucket:      (( grab meta.pipeline ))
-    region_name: us-east-1
+    region_name: eu-west-3
     access_key:  ((aws-access-key))
     secret_key:  ((aws-secret-key))
 
   github:
     owner:  gstackio
     repo:   yasak
-    branch: master
     private_key:  ((github-private-key))
     access_token: ((github-access-token))
 
@@ -39,7 +44,7 @@ meta:
     webhook:       ((slack-webhook))
     username:      ((slack-username))
     icon:          ((slack-icon-url))
-    channel:       "#pipelines-notifications"
+    channel:       "#oss-pipelines-notifications"
 
   credhub:
     client: concourse-gk-plat-devs-to-credhub
@@ -97,47 +102,97 @@ jobs:
 
   - name: test
     plan:
-      - do:
-        - (( append ))
-        - get: build-container
-          trigger: true
-        - task: compile
-          image: build-container
-          config:
-            platform: linux
-            inputs:
-              - name: git
-            outputs:
-              - name: compiled-binary
-            run:
-              dir: git
-              path: go
-              args:
-                - build
-                - -o
-                - ../compiled-binary/yasak
-        - task: smoke-test
-          image: build-container
-          config:
-            platform: linux
-            inputs:
-              - name: compiled-binary
-              - name: git
-            run:
-              path: sh
-              args:
-                - -exc
-                - |
-                  export PATH=${PWD}/compiled-binary:${PATH}
+      - in_parallel:
+          - (( merge on get ))
+          - get: golang-alpine
+            trigger: true
 
-                  yasak locate --path "/bim/bam" git/test/fixture1.yml > result1
-                  diff -u git/test/expected1 result1
+      # NOTICE: we replace all further steps
+      - # task: test
+        (( prune ))
 
-                  apk add --no-progress bash
-                  git/example-edit-value.sh "git/test/fixture2.yml" "/bim/bam/toto" "plop" > result2.yml
-                  diff -u result2.yml git/test/expected2.yml
+      - &compile_task
+        task: compile
+        image: golang-alpine
+        config:
+          platform: linux
+          inputs:
+            - name: git
+          outputs:
+            - name: compiled-binary
+          run:
+            dir: git
+            path: go
+            args:
+              - build
+              - -o
+              - ../compiled-binary/yasak
+
+      - &smpoke_test_task
+        task: smoke-test
+        image: image
+        config:
+          platform: linux
+          inputs:
+            - name: compiled-binary
+            - name: git
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                export PATH=${PWD}/compiled-binary:${PATH}
+
+                yasak locate --path "/bim/bam" git/test/fixture1.yml > result1
+                diff -u git/test/expected1 result1
+
+                git/example-edit-value.sh "git/test/fixture2.yml" "/bim/bam/toto" "plop" > result2.yml
+                diff -u result2.yml git/test/expected2.yml
+
+  - name: test-pr
+    plan:
+      - (( inline ))
+      - in_parallel:
+          - (( merge on get ))
+          - get: golang-alpine
+            trigger: true
+
+      - {} # put: git-pull-requests
+
+      # We replace the 'task: text' by a block of 2 tasks
+      - task:   (( prune ))
+        image:  (( prune ))
+        config: (( prune ))
+        do:
+          - *compile_task
+
+          - *smpoke_test_task
+
+  - name: shipit
+    plan:
+      - (( inline ))
+      - in_parallel:
+          - (( merge on get ))
+          - { get: image, resource: golang-alpine, passed: [ test ] }
+      - task: release
+        config:
+          run:
+            path: sh
+            args:
+              - -ec
+              - |
+                apk --no-progress add  bash  git  gcc  musl-dev
+                export PATH=${PWD}/gopath/bin:${PATH}
+                bash "${SHIPIT_SCRIPT}"
+          params:
+            SHIPIT_SCRIPT: (( concat "./gopath/src/" meta.go.module "/ci/scripts/shipit" ))
 
 resources:
+
+  - name: image
+    source:
+      tag:               (( prune ))
+      semver_constraint: "< 1970" # Avoid YYYYMMDD tags like '20231219'
 
   - name: version
     source:
@@ -152,6 +207,14 @@ resources:
       file:        (( concat "versions/" meta.pipeline ))
       private_key: ((github-private-key))
       git_user:    "((git-commit-name)) <((git-commit-email))>"
+
+  - name: golang-alpine
+    type: registry-image
+    icon: docker
+    check_every: 24h
+    source:
+      repository: golang
+      variant:    alpine
 
   - name: git
     webhook_token: ((concourse-webhook-token))
@@ -174,14 +237,6 @@ resources:
       username: (( grab meta.credhub.client ))
       password: ((credhub-client-secret))
       path: (( concat "/concourse/" meta.team "/concourse-webhook-token" ))
-
-  - name: build-container
-    type: docker-image
-    icon: docker
-    source:
-      repository: golang
-      tag: (( concat meta.go.version "-alpine" ))
-    check_every: 24h
 
 resource_types:
 
