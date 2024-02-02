@@ -36,8 +36,8 @@ func main() {
     printed on stderr, and the tool
     exits with an error status of 1.
 
-	When silent mode is enabled and the value can't be found, no error is
-	printed, and the tool exits with no error, i.e. an exit status of 0.`,
+    When silent mode is enabled and the value can't be found, no error is
+    printed, and the tool exits with no error, i.e. an exit status of 0.`,
 		Args: cobra.MinimumNArgs(1),
 
 		Run: func(cmd *cobra.Command, args []string) {
