@@ -1,6 +1,6 @@
 module gstack.io/yaml/yasak
 
-go 1.22
+go 1.23
 
 require (
 	github.com/gstackio/go-patch v0.3.0
