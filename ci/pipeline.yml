@@ -8,8 +8,9 @@
 # ci/settings.yml and override what needs overridden.
 # This uses spruce, so you have some options there.
 #
-# author:  James Hunt <james@niftylogic.com>
-# created: 2016-03-30
+# original author: James Hunt <james@niftylogic.com>
+# created:         2016-03-30
+# maintainer:      Benjamin Gandon (Gstack)
 
 meta:
   name:     (( param "Please name your pipeline" ))
@@ -61,8 +62,8 @@ meta:
     success_moji: ":airplane_departure:"
     upset_moji:   ":sadpanda:"
     pipeline_url:  (( concat meta.url "/teams/${BUILD_TEAM_NAME}/pipelines/${BUILD_PIPELINE_NAME}" ))
-    fail_link:     (( concat "<" meta.slack.pipeline_url "/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}| Concourse Failure! " meta.slack.upset_moji ">" ))
-    fail_text:    '(( concat meta.slack.fail_link " " meta.pipeline ": `${BUILD_JOB_NAME}` job failed" ))'
+    fail_link:     (( concat "<" meta.slack.pipeline_url "/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}| Let's go fix it!>" ))
+    fail_text:    '(( concat meta.pipeline ": `${BUILD_JOB_NAME}` job has failed " meta.slack.upset_moji " " meta.slack.fail_link " :hammer_and_wrench:" ))'
 
 groups:
   - name: (( grab meta.pipeline ))
@@ -100,6 +101,7 @@ jobs:
             MODULE: (( grab meta.go.module ))
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -165,6 +167,7 @@ jobs:
             SUCCESS_MOJI: (( grab meta.slack.success_moji ))
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -207,6 +210,7 @@ jobs:
         params: { file: version/number }
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -221,6 +225,7 @@ jobs:
       - { put: version,                params: { file: version/number} }
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -235,6 +240,7 @@ jobs:
       - { put: version,                 params: { file: version/number } }
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -249,6 +255,7 @@ jobs:
       - { put: version,                 params: { file: version/number } }
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -316,6 +323,7 @@ jobs:
             text_file: notifications/message
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
