@@ -11,6 +11,7 @@ meta:
   go:
     binary: yasak
     cmd_module: .
+    force_static_binary: true
 
   git:
     email:  ((git-commit-email))
