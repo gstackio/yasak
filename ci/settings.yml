@@ -288,6 +288,7 @@ jobs:
 
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -295,6 +296,7 @@ jobs:
         text:     (( grab meta.slack.fail_text ))
     on_success:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
